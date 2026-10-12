@@ -1,0 +1,931 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e10">
+<meta name="robots" content="noindex, nofollow">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Cartilla de Puntos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0e0e10; --surface:#18181b; --surface-2:#1f1f23; --surface-3:#26262c;
+  --line:#2f2f35; --text:#efeff1; --muted:#adadb8; --dim:#90909b;
+  --purple:#9147ff; --purple-2:#772ce8; --purple-soft:rgba(145,71,255,.16);
+  --gold:#ffd60a; --green:#00d68f; --green-soft:rgba(0,214,143,.14);
+  --red:#ff4f5e; --red-soft:rgba(255,79,94,.14);
+  --radius:16px;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  overscroll-behavior-y:contain}
+body{min-height:100dvh}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+input,select{font:inherit;font-size:16px;color:var(--text)}
+svg{display:block}
+
+/* ---------- Cabecera ---------- */
+.top{position:relative;
+  padding:calc(var(--safe-top) + 12px) 16px 10px}
+.top-row{display:flex;align-items:center;gap:12px}
+.avatar{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(135deg,var(--purple),#5c16c5);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--purple)}
+.who{flex:1;min-width:0}
+.who b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who small{color:var(--muted);font-size:12px}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn:active{background:var(--surface-2)}
+
+.balance{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px;
+  display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;position:relative;overflow:hidden}
+.balance::before{content:"";position:absolute;inset:-40% -10% auto auto;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle,rgba(145,71,255,.35),transparent 70%);pointer-events:none}
+.balance .lbl{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.balance .num{display:flex;align-items:center;gap:8px;font-size:40px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.balance .num.bump{animation:bump .45s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes bump{40%{transform:scale(1.08)}}
+.streak{grid-row:1/3;grid-column:2;text-align:center;background:var(--surface-2);border-radius:14px;padding:8px 12px;min-width:72px}
+.streak .fire{font-size:22px;line-height:1}
+.streak b{display:block;font-size:18px}
+.streak small{color:var(--muted);font-size:11px}
+.lvl{grid-column:1/3;margin-top:10px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+.bar{flex:1;height:6px;border-radius:9px;background:var(--surface-3);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--purple),#c39bff);transition:width .5s ease}
+
+.period{margin-top:10px;width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;text-align:left;
+  background:var(--surface);border:1px dashed var(--line);color:var(--muted);font-size:13px}
+.period .pe{font-size:20px;flex:none}
+.period span{flex:1}
+.period b{color:var(--text)}
+.period.on{background:rgba(255,111,181,.13);border:1px solid rgba(255,111,181,.5);color:#ffc2e0}
+.period.on b{color:#ff8cc6}
+.period .sw{width:38px;height:22px;border-radius:11px;background:var(--surface-3);position:relative;flex:none;transition:background .2s}
+.period .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.period.on .sw{background:#ff6fb5}
+.period.on .sw::after{transform:translateX(16px)}
+.coin{width:1em;height:1em;flex:none;color:var(--gold)}
+
+/* ---------- Contenido ---------- */
+main{padding:4px 16px calc(96px + var(--safe-bottom))}
+.view{display:none}
+.view.on{display:block;animation:fade .2s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}}
+.section-h{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 10px}
+.section-h h2{margin:0;font-size:18px}
+.section-h .hint{color:var(--muted);font-size:12px}
+.link{color:#bf94ff;font-weight:600;font-size:14px;padding:6px 4px}
+
+.rule{margin:14px 2px 0;color:var(--muted);font-size:13px}.rule b{color:var(--text)}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:12px -16px 0;padding:0 16px;overscroll-behavior-x:contain}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:8px 14px;border-radius:999px;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:14px;border:1px solid transparent}
+.chip.on{background:var(--purple-soft);color:#d4bcff;border-color:rgba(145,71,255,.5)}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.task{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px 12px 12px;min-height:118px;display:flex;flex-direction:column;gap:8px;transition:transform .12s ease,background .12s}
+.task:active{transform:scale(.96);background:var(--surface-2)}
+.task .emo{font-size:28px;line-height:1}
+.task .name{font-weight:600;font-size:14px;line-height:1.25;flex:1}
+.task .pts{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;font-weight:800;font-size:14px;
+  padding:4px 9px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+.task.minus .pts{background:var(--red-soft);color:var(--red)}
+.task.minus{border-color:rgba(255,79,94,.25)}
+.edit-badge{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--surface-3);display:none;place-items:center;font-size:13px}
+.editing .edit-badge{display:grid}
+.add-card{border:1.5px dashed var(--line);background:transparent;color:var(--muted);align-items:center;justify-content:center;font-weight:600}
+
+/* Premios */
+.rewards{display:flex;flex-direction:column;gap:10px}
+.reward{position:relative;display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);padding:12px}
+.reward .emo{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-size:28px;background:var(--surface-2)}
+.reward .info{min-width:0}
+.reward .name{font-weight:700;font-size:15px}
+.reward .meta{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.tier{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px}
+.t1{background:rgba(205,127,50,.18);color:#e0a26a}
+.t2{background:rgba(192,192,210,.16);color:#d3d3e0}
+.t3{background:rgba(255,214,10,.15);color:var(--gold)}
+.t4{background:linear-gradient(90deg,rgba(145,71,255,.3),rgba(255,79,200,.3));color:#ffc8f2}
+.reward .bar{margin-top:8px;height:5px}
+.reward .bar i{background:linear-gradient(90deg,var(--gold),#ffb000)}
+.buy{display:flex;align-items:center;gap:5px;font-weight:800;padding:10px 12px;border-radius:12px;background:var(--purple);color:#fff;white-space:nowrap}
+.buy:active{background:var(--purple-2);transform:scale(.97)}
+.buy[disabled]{background:var(--surface-3);color:var(--dim)}
+.buy .coin{color:currentColor}
+.reward.locked .emo{filter:grayscale(.7);opacity:.7}
+.tier.spicy{background:rgba(255,79,94,.15);color:#ff8a94;padding:2px 5px}
+.t5{background:linear-gradient(90deg,var(--gold),#ff8fd8);color:#1a1020}
+.reward.grand{grid-template-columns:72px 1fr;padding:16px;border:1.5px solid transparent;margin-bottom:6px;
+  background:linear-gradient(var(--surface),var(--surface)) padding-box,linear-gradient(135deg,var(--gold),#ff8fd8,var(--purple)) border-box}
+.reward.grand .emo,.reward.grand.locked .emo{width:72px;height:72px;font-size:42px;filter:none;opacity:1;background:linear-gradient(135deg,rgba(255,214,10,.18),rgba(255,143,216,.18))}
+.reward.grand .name{font-size:19px}
+.reward.grand .buy{grid-column:1/3;justify-content:center}
+.reward.grand .bar{height:8px}
+.reward.grand .bar i{background:linear-gradient(90deg,var(--gold),#ff8fd8)}
+.editing .reward .edit-badge{position:static;display:grid}
+
+/* Canjes */
+.list{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.row .emo{font-size:24px;width:32px;text-align:center;flex:none}
+.row .info{flex:1;min-width:0}
+.row .name{font-weight:600;font-size:14px}
+.row .when{color:var(--dim);font-size:12px}
+.row .amt{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.amt.plus{color:var(--green)} .amt.minus{color:var(--red)} .amt.spend{color:#bf94ff}
+.done-btn{padding:8px 12px;border-radius:10px;background:var(--green-soft);color:var(--green);font-weight:700;font-size:13px;white-space:nowrap}
+.row.done{opacity:.55}
+.x-btn{width:32px;height:32px;border-radius:10px;color:var(--dim);display:grid;place-items:center;flex:none}
+.x-btn:active{background:var(--surface-2)}
+.day-h{color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:16px 2px 4px;display:flex;justify-content:space-between}
+.empty{text-align:center;color:var(--muted);padding:40px 20px}
+.empty .big{font-size:44px;margin-bottom:8px}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.stat small{color:var(--muted);font-size:11px}
+
+/* ---------- Navegación ---------- */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(4,1fr);
+  background:rgba(24,24,27,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);
+  padding:6px 8px calc(6px + var(--safe-bottom))}
+nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;color:var(--dim);font-size:11px;font-weight:600;position:relative}
+nav button svg{width:24px;height:24px}
+nav button.on{color:var(--text)}
+nav button.on svg{color:var(--purple)}
+.badge{position:absolute;top:2px;left:calc(50% + 6px);min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 5px}
+
+.badge[hidden],[hidden]{display:none!important}
+/* ---------- Hoja inferior ---------- */
+.scrim{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;background:var(--surface);border-radius:22px 22px 0 0;
+  padding:10px 20px calc(20px + var(--safe-bottom));transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  max-height:88dvh;overflow-y:auto}
+.sheet.on{transform:none}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--surface-3);margin:0 auto 14px}
+.sheet h3{margin:0 0 4px;font-size:20px}
+.sheet p{color:var(--muted);margin:0 0 16px}
+.field{display:block;margin-bottom:14px}
+.field span{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.field input,.field select{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--purple)}
+.two{display:grid;grid-template-columns:90px 1fr;gap:10px}
+.btns{display:flex;gap:10px;margin-top:8px}
+.btn{flex:1;padding:14px;border-radius:14px;font-weight:800;text-align:center;background:var(--surface-3)}
+.btn.primary{background:var(--purple);color:#fff}
+.btn.danger{background:var(--red-soft);color:var(--red);flex:0 0 auto;padding:14px 16px}
+.btn:active{transform:scale(.98)}
+.big-emo{font-size:64px;text-align:center;margin:6px 0 8px}
+.confirm-cost{display:flex;align-items:center;justify-content:center;gap:6px;font-size:22px;font-weight:800;margin-bottom:6px}
+.after{text-align:center;color:var(--muted);font-size:13px;margin-bottom:16px}
+.menu-item{display:flex;align-items:center;gap:12px;width:100%;padding:14px 4px;border-bottom:1px solid var(--line);text-align:left;font-weight:600}
+.menu-item:last-child{border-bottom:0}
+.menu-item small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.menu-item .mi{font-size:20px;width:28px;text-align:center}
+
+/* ---------- Toast y efectos ---------- */
+.toast{position:fixed;left:16px;right:16px;bottom:calc(84px + var(--safe-bottom));z-index:40;background:var(--surface-3);border:1px solid var(--line);
+  border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.4);
+  transform:translateY(20px);opacity:0;pointer-events:none;transition:.22s ease}
+.toast.on{transform:none;opacity:1;pointer-events:auto}
+.toast .msg{flex:1;font-weight:600;font-size:14px}
+.toast button{color:#bf94ff;font-weight:800;padding:4px 6px}
+.floater{position:fixed;z-index:60;pointer-events:none;font-weight:900;font-size:24px;display:flex;align-items:center;gap:4px;
+  transform:translate(-50%,-50%);animation:floatUp .9s ease-out forwards;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-60%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-180%) scale(1)}}
+#confetti{position:fixed;inset:0;z-index:70;pointer-events:none}
+.levelup{position:fixed;inset:0;z-index:65;display:grid;place-items:center;pointer-events:none}
+.levelup div{background:linear-gradient(135deg,var(--purple),#ff4fc8);padding:18px 28px;border-radius:20px;text-align:center;font-weight:900;font-size:22px;
+  box-shadow:0 20px 50px rgba(0,0,0,.55);animation:pop 2.2s cubic-bezier(.2,.9,.3,1.3) forwards}
+.levelup small{display:block;font-size:13px;font-weight:600;opacity:.9}
+@keyframes pop{0%{transform:scale(.4);opacity:0}15%{transform:scale(1);opacity:1}80%{opacity:1}100%{opacity:0;transform:scale(.95)}}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (min-width:600px){
+  .top,main{max-width:560px;margin:0 auto}
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="coin" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5l2.6 6.1 6.6.6-5 4.4 1.5 6.5L12 16.7 6.3 20.1l1.5-6.5-5-4.4 6.6-.6z"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="top-row">
+    <div class="avatar" id="avatar">👑</div>
+    <div class="who"><b id="who">Mi cartilla</b><small id="lvlTxt">Nivel 1</small></div>
+    <button class="icon-btn" data-act="menu" aria-label="Ajustes">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+    </button>
+  </div>
+  <div class="balance">
+    <div class="lbl">Tus puntos</div>
+    <div class="num" id="balance"><svg class="coin"><use href="#coin"/></svg><span>0</span></div>
+    <div class="streak"><div class="fire">🔥</div><b id="streak">0</b><small>días seguidos</small></div>
+    <div class="lvl"><span id="lvlA">Nv 1</span><div class="bar"><i id="lvlBar" style="width:0"></i></div><span id="lvlB">0/300</span></div>
+  </div>
+  <button class="period" id="period" data-act="period"></button>
+</header>
+
+<main>
+  <!-- GANAR -->
+  <section class="view on" id="v-ganar">
+    <div class="chips" id="cats"></div>
+    <p class="rule">Estudiar entre semana es lo normal: aquí solo suma lo que va <b>más allá</b>. 💪</p>
+    <div class="section-h"><h2 id="catTitle">Todas</h2><button class="link" data-act="toggle-edit" data-list="tasks">Editar</button></div>
+    <div class="grid" id="tasks"></div>
+  </section>
+
+  <!-- PREMIOS -->
+  <section class="view" id="v-premios">
+    <div class="section-h"><h2>Recompensas</h2><button class="link" data-act="toggle-edit" data-list="rewards">Editar</button></div>
+    <div class="rewards" id="rewards"></div>
+  </section>
+
+  <!-- CANJES -->
+  <section class="view" id="v-canjes">
+    <div class="section-h"><h2>Pendientes</h2><span class="hint">Él tiene que cumplirlos 😉</span></div>
+    <div class="list" id="pending"></div>
+    <div class="section-h"><h2>Ranking de premios</h2><span class="hint">Los más canjeados</span></div>
+    <div class="list" id="ranking"></div>
+    <div class="section-h"><h2>Ya disfrutados</h2></div>
+    <div class="list" id="done"></div>
+  </section>
+
+  <!-- HISTORIAL -->
+  <section class="view" id="v-historial">
+    <div class="stats" id="stats"></div>
+    <div id="history"></div>
+  </section>
+</main>
+
+<nav id="nav">
+  <button class="on" data-view="ganar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>Ganar</button>
+  <button data-view="premios"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8S10.5 3 7.5 3a2.5 2.5 0 0 0 0 5M12 8s1.5-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>Premios</button>
+  <button data-view="canjes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Canjes<span class="badge" id="pendBadge" hidden>0</span></button>
+  <button data-view="historial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historial</button>
+</nav>
+
+<div class="scrim" id="scrim" data-act="close"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+<div class="toast" id="toast"><span class="msg" id="toastMsg"></span><button id="toastUndo">Deshacer</button></div>
+<canvas id="confetti"></canvas>
+
+<script>
+const KEY = 'cartilla-puntos-v1';
+const LEVEL_STEP = 300;
+const PERIOD_DAYS = 6;      // el modo regla se apaga solo pasado este tiempo
+const PERIOD_PLUS = 1.5;    // lo que suma, vale más
+const PERIOD_MINUS = 0.5;   // lo que resta, duele menos
+const GRAND = 5000; // a partir de aquí, premio final destacado arriba del todo
+const CATS = [
+  { id: 'all',   label: 'Todas',        emo: '✨' },
+  { id: 'opo',   label: 'Opo extra',     emo: '📚' },
+  { id: 'mimos', label: 'Mimos',        emo: '💜' },
+  { id: 'perro', label: 'Perro',        emo: '🐶' },
+  { id: 'casa',  label: 'Casa',         emo: '🏠' },
+  { id: 'picante', label: 'Picante',    emo: '🔥' },
+  { id: 'resta', label: 'Restan',       emo: '⚠️' },
+];
+
+const DEFAULTS = {
+  settings: { name: '', avatar: '👑' },
+  tasks: [
+    { emo: '🤒', name: 'Estoy mala y he estudiado', pts: 40, cat: 'opo' },
+    { emo: '🩸', name: 'Tengo dolores de regla y he estudiado igual', pts: 30, cat: 'opo' },
+    { emo: '🗓️', name: 'Es finde y he estudiado', pts: 35, cat: 'opo' },
+    { emo: '🎉', name: 'Es festivo y he estudiado', pts: 35, cat: 'opo' },
+    { emo: '⏰', name: 'Hora extra (más de lo planificado)', pts: 20, cat: 'opo' },
+    { emo: '🌅', name: 'Madrugón para estudiar', pts: 15, cat: 'opo' },
+    { emo: '📝', name: 'Simulacro extra', pts: 25, cat: 'opo' },
+    { emo: '🚀', name: 'Tema terminado antes de plazo', pts: 50, cat: 'opo' },
+    { emo: '💆', name: 'Te he dado un masaje', pts: 25, cat: 'mimos' },
+    { emo: '🥰', name: 'Te he mimado mucho', pts: 20, cat: 'mimos' },
+    { emo: '💌', name: 'Detalle o sorpresa', pts: 30, cat: 'mimos' },
+    { emo: '🥤', name: 'Te he llevado algo de beber', pts: 10, cat: 'mimos' },
+    { emo: '💊', name: 'Me he acordado de darle la pastilla', pts: 15, cat: 'perro' },
+    { emo: '💩', name: 'Me he acordado de poner las bolsas de la caca', pts: 10, cat: 'perro' },
+    { emo: '🏛️', name: 'He ido a recoger las bolsas a la junta', pts: 15, cat: 'perro' },
+    { emo: '🦴', name: 'He subido su comida del trastero', pts: 10, cat: 'perro' },
+    { emo: '🛁', name: 'Le he bañado', pts: 25, cat: 'perro' },
+    { emo: '🪮', name: 'Le he cepillado', pts: 10, cat: 'perro' },
+    { emo: '🧺', name: 'He recogido lo que dejé por medio', pts: 10, cat: 'casa' },
+    { emo: '🗂️', name: 'Mesa de estudio ordenada', pts: 10, cat: 'casa' },
+    { emo: '😏', name: 'He tomado yo la iniciativa', pts: 25, cat: 'picante' },
+    { emo: '🩱', name: 'Te he sorprendido con lencería', pts: 30, cat: 'picante' },
+    { emo: '🕯️', name: 'Te he dado un masaje erótico', pts: 30, cat: 'picante' },
+    { emo: '🚿', name: 'Te he invitado a la ducha conmigo', pts: 20, cat: 'picante' },
+    { emo: '💌', name: 'Te he mandado un mensaje subido de tono', pts: 10, cat: 'picante' },
+    { emo: '🧦', name: 'He dejado cosas por medio', pts: 10, cat: 'resta' },
+    { emo: '📱', name: 'Procrastinar con el móvil', pts: 15, cat: 'resta' },
+    { emo: '😴', name: 'Me he saltado el estudio de entre semana', pts: 25, cat: 'resta' },
+    { emo: '😩', name: 'Decir «no voy a aprobar»', pts: 10, cat: 'resta' },
+    { emo: '🙈', name: 'Se me ha olvidado su pastilla', pts: 15, cat: 'resta' },
+    { emo: '💩', name: 'No he puesto las bolsas de las cacas', pts: 10, cat: 'resta' },
+    { emo: '🦴', name: 'No he subido su comida del trastero', pts: 10, cat: 'resta' },
+  ],
+  rewards: [
+    { emo: '🤗', name: 'Abrazo de un minuto sin soltarnos', cost: 10 },
+    { emo: '💃', name: 'Bailamos la canción que yo elija', cost: 15 },
+    { emo: '🎵', name: 'Elijo la música en el coche todo el día', cost: 20 },
+    { emo: '🛋️', name: 'Me quedo el mejor sitio del sofá', cost: 20 },
+    { emo: '📺', name: 'Un capítulo extra de mi serie', cost: 20 },
+    { emo: '🛏️', name: 'Me haces la cama', cost: 25 },
+    { emo: '☀️', name: 'Me despiertas a besos y mimos', cost: 25 },
+    { emo: '🎧', name: 'Media hora de silencio total para mí', cost: 25 },
+    { emo: '💆', name: 'Masaje de cabeza de 10 min', cost: 30 },
+    { emo: '🚿', name: 'Toalla calentita al salir de la ducha', cost: 30 },
+    { emo: '🚗', name: 'Me llevas y me recoges', cost: 30 },
+    { emo: '🦶', name: 'Masaje de pies de 10 min', cost: 35 },
+    { emo: '🧴', name: 'Me pones la mascarilla facial', cost: 35 },
+    { emo: '😴', name: 'Siesta sin interrupciones', cost: 35 },
+    { emo: '🌅', name: 'Paseo al atardecer juntos', cost: 40 },
+    { emo: '🎮', name: 'Una hora de lo que yo quiera sin culpa', cost: 40 },
+    { emo: '🧸', name: 'Tarde de manta y peli abrazados', cost: 45 },
+    { emo: '🧺', name: 'Me doblas y guardas la ropa', cost: 45 },
+    { emo: '💌', name: 'Me escribes una carta de amor', cost: 50 },
+    { emo: '🃏', name: 'Comodín: borro una penalización', cost: 50 },
+    { emo: '🙋', name: 'Me das la razón en algo (una vez)', cost: 60 },
+    { emo: '🖊️', name: 'Material de estudio bonito', cost: 60 },
+    { emo: '🥗', name: 'Me cocinas la cena que yo elija', cost: 70 },
+    { emo: '🌿', name: 'Planta para mi mesa de estudio', cost: 70 },
+    { emo: '🕯️', name: 'Spa en casa: velas, mascarilla y música', cost: 90 },
+    { emo: '🌸', name: 'Kit regla: manta, bolsa caliente y peli', cost: 40 },
+    { emo: '🎬', name: 'Elijo yo la peli o serie', cost: 50 },
+    { emo: '🛁', name: 'Baño relajante preparado', cost: 60 },
+    { emo: '🛏️', name: 'Desayuno en la cama', cost: 80 },
+    { emo: '🧽', name: 'Me libro de una tarea', cost: 100 },
+    { emo: '💆', name: 'Masaje de 30 min para mí', cost: 120 },
+    { emo: '💐', name: 'Ramo de flores', cost: 150 },
+    { emo: '🥾', name: 'Excursión o plan que elijo yo', cost: 250 },
+    { emo: '🛍️', name: 'Capricho de hasta 25 €', cost: 300 },
+    { emo: '🍷', name: 'Cena en restaurante', cost: 400 },
+    { emo: '🧖', name: 'Día de spa', cost: 700 },
+    { emo: '✈️', name: 'Escapada de fin de semana', cost: 1500 },
+    { emo: '🎲', name: 'Tarde de juegos de mesa que elijo yo', cost: 110 },
+    { emo: '💅', name: 'Manicura o pedicura hecha por ti', cost: 180 },
+    { emo: '📖', name: 'Un libro que yo elija', cost: 200 },
+    { emo: '🛍️', name: 'Me acompañas de compras sin quejarte', cost: 280 },
+    { emo: '🧘', name: 'Mañana libre para mí (tú te encargas de todo)', cost: 350 },
+    { emo: '🎭', name: 'Entradas de cine, teatro o monólogo', cost: 450 },
+    { emo: '🌹', name: 'Cita sorpresa organizada por ti', cost: 550 },
+    { emo: '🎁', name: 'Capricho de hasta 50 €', cost: 600 },
+    { emo: '🔐', name: 'Escape room, kayak o experiencia juntos', cost: 800 },
+    { emo: '🏨', name: 'Noche de hotel con desayuno', cost: 1000 },
+    { emo: '🎤', name: 'Concierto de quien yo elija', cost: 1200 },
+    { emo: '💋', name: 'Sesión de besos sin prisa', cost: 20, spicy: true },
+    { emo: '🛁', name: 'Ducha juntos', cost: 40, spicy: true },
+    { emo: '⚡', name: 'Un rapidito cuando yo diga', cost: 50, spicy: true },
+    { emo: '👗', name: 'Te pones lo que yo elija', cost: 60, spicy: true },
+    { emo: '🎲', name: 'Noche de dados picantes', cost: 70, spicy: true },
+    { emo: '🕯️', name: 'Masaje erótico con aceite para mí', cost: 80, spicy: true },
+    { emo: '🙈', name: 'Noche con los ojos vendados', cost: 100, spicy: true },
+    { emo: '👑', name: 'Esta noche mando yo', cost: 120, spicy: true },
+    { emo: '🎁', name: 'Juguete nuevo que elijo yo', cost: 250, spicy: true },
+    { emo: '✨', name: 'Cumplimos la fantasía que yo elija', cost: 500, spicy: true },
+    { emo: '🏨', name: 'Noche de hotel solo para nosotros 🔥', cost: 900, spicy: true },
+    { emo: '👶', name: 'Tener un bebé', cost: 1000000 },
+  ],
+  log: [],
+  redemptions: [],
+};
+
+/* ---------- Estado ---------- */
+const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36);
+let S = load();
+let cat = 'all';
+let editing = { tasks: false, rewards: false };
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  const s = structuredClone(DEFAULTS);
+  s.tasks.forEach(t => t.id = uid());
+  s.rewards.forEach(r => r.id = uid());
+  return s;
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+}
+
+const spicyOn = () => S.settings.spicy !== false;
+const periodOn = () => (S.settings.periodUntil || 0) > Date.now();
+const taskPts = t => {
+  if (t.cat === 'resta') return -(periodOn() ? Math.max(1, Math.round(t.pts * PERIOD_MINUS)) : t.pts);
+  return periodOn() ? Math.round(t.pts * PERIOD_PLUS) : t.pts;
+};
+const balance = () => S.log.reduce((a, e) => a + e.pts, 0);
+const earned = () => S.log.reduce((a, e) => a + (e.pts > 0 ? e.pts : 0), 0);
+const level = () => Math.floor(earned() / LEVEL_STEP) + 1;
+const dayKey = t => { const d = new Date(t); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+
+function streak() {
+  const days = new Set(S.log.filter(e => e.type === 'task' && e.pts > 0).map(e => dayKey(e.t)));
+  const d = new Date();
+  if (!days.has(dayKey(d))) d.setDate(d.getDate() - 1); // hoy aún cuenta si estudia más tarde
+  let n = 0;
+  while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+function tier(cost) {
+  if (cost >= GRAND) return ['t5', '🏆 El gran premio'];
+  if (cost >= 1000) return ['t4', 'Legendario'];
+  if (cost >= 300) return ['t3', 'Oro'];
+  if (cost >= 100) return ['t2', 'Plata'];
+  return ['t1', 'Bronce'];
+}
+
+/* ---------- Utilidades ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const coin = '<svg class="coin"><use href="#coin"/></svg>';
+const fmt = n => n.toLocaleString('es-ES');
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+function when(t) {
+  const d = new Date(t), now = new Date();
+  const hm = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  if (dayKey(d) === dayKey(now)) return 'Hoy, ' + hm;
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  if (dayKey(d) === dayKey(y)) return 'Ayer, ' + hm;
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ', ' + hm;
+}
+function dayLabel(t) {
+  const d = new Date(t), now = new Date(), y = new Date(); y.setDate(y.getDate() - 1);
+  if (dayKey(d) === dayKey(now)) return 'Hoy';
+  if (dayKey(d) === dayKey(y)) return 'Ayer';
+  return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+/* ---------- Render ---------- */
+let lastLevel = null;
+function renderHeader(bump) {
+  const b = balance(), e = earned(), lv = level();
+  $('#balance span').textContent = fmt(b);
+  if (bump) { const el = $('#balance'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  $('#streak').textContent = streak();
+  $('#who').textContent = S.settings.name ? 'Cartilla de ' + S.settings.name : 'Mi cartilla';
+  $('#avatar').textContent = S.settings.avatar || '👑';
+  $('#lvlTxt').textContent = `Nivel ${lv} · ${fmt(e)} puntos ganados en total`;
+  $('#lvlA').textContent = 'Nv ' + lv;
+  const into = e % LEVEL_STEP;
+  $('#lvlB').textContent = `${into}/${LEVEL_STEP}`;
+  $('#lvlBar').style.width = (into / LEVEL_STEP * 100) + '%';
+  if (lastLevel !== null && lv > lastLevel) levelUp(lv);
+  lastLevel = lv;
+  const pb = $('#period');
+  if (periodOn()) {
+    const days = Math.ceil((S.settings.periodUntil - Date.now()) / 864e5);
+    pb.className = 'period on';
+    pb.innerHTML = `<span class="pe">🌸</span><span><b>Modo regla activado</b><br>Todo suma ×1,5 y lo que resta, a la mitad · ${days === 1 ? 'queda 1 día' : `quedan ${days} días`}</span><i class="sw"></i>`;
+  } else {
+    pb.className = 'period';
+    pb.innerHTML = `<span class="pe">🌸</span><span><b>¿Tienes la regla?</b> Actívalo y todo lo que hagas suma ×1,5</span><i class="sw"></i>`;
+  }
+  const p = S.redemptions.filter(r => !r.done).length;
+  $('#pendBadge').hidden = !p; $('#pendBadge').textContent = p;
+}
+
+function renderCats() {
+  if (!spicyOn() && cat === 'picante') cat = 'all';
+  $('#cats').innerHTML = CATS.filter(c => spicyOn() || c.id !== 'picante').map(c =>
+    `<button class="chip ${c.id === cat ? 'on' : ''}" data-act="cat" data-id="${c.id}">${c.emo} ${c.label}</button>`).join('');
+  $('#catTitle').textContent = CATS.find(c => c.id === cat).label;
+}
+
+function renderTasks() {
+  const list = S.tasks.filter(t => (cat === 'all' || t.cat === cat) && (spicyOn() || t.cat !== 'picante'));
+  // las que restan siempre al final
+  list.sort((a, b) => (a.cat === 'resta') - (b.cat === 'resta'));
+  const grid = $('#tasks');
+  grid.classList.toggle('editing', editing.tasks);
+  grid.innerHTML = list.map(t => {
+    const minus = t.cat === 'resta';
+    return `<button class="task ${minus ? 'minus' : ''}" data-act="task" data-id="${t.id}">
+      <span class="edit-badge">✏️</span>
+      <span class="emo">${esc(t.emo)}</span>
+      <span class="name">${esc(t.name)}</span>
+      <span class="pts">${minus ? '−' : '+'}${Math.abs(taskPts(t))} ${periodOn() ? '🌸' : coin}</span>
+    </button>`;
+  }).join('') + (editing.tasks ? `<button class="task add-card" data-act="new-task">＋ Nueva tarea</button>` : '')
+    + (!editing.tasks && cat === 'all' ? `<button class="task add-card" data-act="adjust">± Puntos a mano</button>` : '');
+  const btn = document.querySelector('[data-list="tasks"]');
+  btn.textContent = editing.tasks ? 'Listo' : 'Editar';
+}
+
+function renderRewards() {
+  const b = balance();
+  // el gran premio va primero; el resto, de más barato a más caro
+  const list = S.rewards.filter(r => spicyOn() || !r.spicy).sort((a, b) => (b.cost >= GRAND) - (a.cost >= GRAND) || (a.cost >= GRAND ? b.cost - a.cost : a.cost - b.cost));
+  const wrap = $('#rewards');
+  wrap.classList.toggle('editing', editing.rewards);
+  wrap.innerHTML = list.map(r => {
+    const [tc, tl] = tier(r.cost);
+    const can = b >= r.cost;
+    const pct = Math.min(100, Math.max(0, b) / r.cost * 100);
+    const times = S.redemptions.filter(x => x.rewardId === r.id).length;
+    return `<div class="reward ${can ? '' : 'locked'} ${r.cost >= GRAND ? 'grand' : ''}">
+      <div class="emo">${esc(r.emo)}</div>
+      <div class="info">
+        <div class="name">${esc(r.name)}</div>
+        <div class="meta"><span class="tier ${tc}">${tl}</span>${r.spicy ? '<span class="tier spicy">🔥</span>' : ''}${can ? '¡Lo tienes!' : r.cost >= GRAND ? `Llevas un ${(Math.max(0, b) / r.cost * 100).toLocaleString('es-ES', { maximumFractionDigits: 3 })} %` : `Te faltan ${fmt(r.cost - b)}`}${times ? ` · canjeado ${times}×` : ''}</div>
+        ${can ? '' : `<div class="bar"><i style="width:${pct}%"></i></div>`}
+      </div>
+      ${editing.rewards
+        ? `<button class="buy" data-act="edit-reward" data-id="${r.id}">✏️ Editar</button>`
+        : `<button class="buy" data-act="redeem" data-id="${r.id}" ${can ? '' : 'disabled'}>${coin}${fmt(r.cost)}</button>`}
+    </div>`;
+  }).join('') + (editing.rewards ? `<button class="task add-card" style="min-height:64px" data-act="new-reward">＋ Nueva recompensa</button>` : '');
+  document.querySelector('[data-list="rewards"]').textContent = editing.rewards ? 'Listo' : 'Editar';
+}
+
+function renderCanjes() {
+  const pend = S.redemptions.filter(r => !r.done).sort((a, b) => b.t - a.t);
+  const done = S.redemptions.filter(r => r.done).sort((a, b) => b.doneAt - a.doneAt);
+  $('#pending').innerHTML = pend.length ? pend.map(r => `
+    <div class="row">
+      <span class="emo">${esc(r.emo)}</span>
+      <div class="info"><div class="name">${esc(r.name)}</div><div class="when">Canjeado ${when(r.t).toLowerCase()} · ${fmt(r.cost)} pts</div></div>
+      <button class="done-btn" data-act="fulfil" data-id="${r.id}">Cumplido ✓</button>
+    </div>`).join('')
+    : `<div class="empty"><div class="big">🎁</div>No hay premios pendientes.<br>¡Ve a Premios y date un capricho!</div>`;
+
+  const counts = {};
+  S.redemptions.forEach(r => {
+    counts[r.name] = counts[r.name] || { emo: r.emo, name: r.name, n: 0, pts: 0 };
+    counts[r.name].n++; counts[r.name].pts += r.cost;
+  });
+  const rank = Object.values(counts).sort((a, b) => b.n - a.n || b.pts - a.pts).slice(0, 5);
+  const medals = ['🥇', '🥈', '🥉', '4º', '5º'];
+  $('#ranking').innerHTML = rank.length ? rank.map((r, i) => `
+    <div class="row">
+      <span class="emo" style="font-size:${i < 3 ? 24 : 15}px;color:var(--muted);font-weight:800">${medals[i]}</span>
+      <span class="emo">${esc(r.emo)}</span>
+      <div class="info"><div class="name">${esc(r.name)}</div><div class="when">${fmt(r.pts)} puntos gastados</div></div>
+      <span class="amt spend">${r.n}×</span>
+    </div>`).join('')
+    : `<div class="empty" style="padding:20px">Aún no hay ranking. El primer canje se lleva el oro 🥇</div>`;
+
+  $('#done').innerHTML = done.length ? done.slice(0, 30).map(r => `
+    <div class="row done">
+      <span class="emo">${esc(r.emo)}</span>
+      <div class="info"><div class="name">${esc(r.name)}</div><div class="when">Disfrutado ${when(r.doneAt).toLowerCase()}</div></div>
+      <span class="amt spend">✓</span>
+    </div>`).join('')
+    : `<div class="empty" style="padding:20px">Todavía nada por aquí.</div>`;
+}
+
+function renderHistory() {
+  const now = new Date();
+  const weekAgo = Date.now() - 7 * 864e5;
+  const today = S.log.filter(e => dayKey(e.t) === dayKey(now) && e.pts > 0).reduce((a, e) => a + e.pts, 0);
+  const week = S.log.filter(e => e.t >= weekAgo && e.pts > 0).reduce((a, e) => a + e.pts, 0);
+  const studyWeek = S.log.filter(e => e.t >= weekAgo && e.cat === 'opo' && e.pts > 0).length;
+  $('#stats').innerHTML = `
+    <div class="stat"><b>+${fmt(today)}</b><small>hoy</small></div>
+    <div class="stat"><b>+${fmt(week)}</b><small>últimos 7 días</small></div>
+    <div class="stat"><b>${studyWeek}</b><small>extras opo / 7 días</small></div>`;
+
+  const items = [...S.log].sort((a, b) => b.t - a.t).slice(0, 200);
+  if (!items.length) {
+    $('#history').innerHTML = `<div class="empty"><div class="big">📜</div>Aquí aparecerá todo lo que vayas ganando y gastando.</div>`;
+    return;
+  }
+  let html = '', cur = '';
+  const sums = {};
+  items.forEach(e => { const k = dayKey(e.t); sums[k] = (sums[k] || 0) + e.pts; });
+  items.forEach(e => {
+    const k = dayKey(e.t);
+    if (k !== cur) {
+      if (cur) html += '</div>';
+      cur = k;
+      const s = sums[k];
+      html += `<div class="day-h"><span>${dayLabel(e.t)}</span><span>${s >= 0 ? '+' : ''}${fmt(s)}</span></div><div class="list">`;
+    }
+    const cls = e.type === 'reward' ? 'spend' : e.pts >= 0 ? 'plus' : 'minus';
+    html += `<div class="row">
+      <span class="emo">${esc(e.emo)}</span>
+      <div class="info"><div class="name">${esc(e.name)}</div><div class="when">${new Date(e.t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}${e.period ? ' · 🌸 modo regla' : ''}</div></div>
+      <span class="amt ${cls}">${e.pts >= 0 ? '+' : '−'}${fmt(Math.abs(e.pts))}</span>
+      ${e.type !== 'reward' ? `<button class="x-btn" data-act="del-log" data-id="${e.id}" aria-label="Borrar">✕</button>` : '<span style="width:32px"></span>'}
+    </div>`;
+  });
+  $('#history').innerHTML = html + '</div>';
+}
+
+function renderAll(bump) {
+  renderHeader(bump); renderCats(); renderTasks(); renderRewards(); renderCanjes(); renderHistory();
+}
+
+/* ---------- Acciones ---------- */
+function addLog(entry, ev) {
+  const e = { id: uid(), t: Date.now(), ...entry };
+  S.log.push(e); save();
+  if (ev) floater(ev, e.pts);
+  renderAll(true);
+  return e;
+}
+
+function doTask(t, ev) {
+  const minus = t.cat === 'resta';
+  const pts = taskPts(t);
+  const e = addLog({ type: 'task', name: t.name, emo: t.emo, cat: t.cat, pts, period: periodOn() || undefined }, ev);
+  buzz(minus ? [30, 40, 30] : 15);
+  toast(`${minus ? '−' : '+'}${Math.abs(pts)}${e.period ? ' 🌸' : ''} · ${t.name}`, () => {
+    S.log = S.log.filter(x => x.id !== e.id); save(); renderAll();
+  });
+}
+
+function redeem(r) {
+  if (balance() < r.cost) return;
+  const red = { id: uid(), t: Date.now(), rewardId: r.id, name: r.name, emo: r.emo, cost: r.cost, done: false };
+  S.redemptions.push(red);
+  S.log.push({ id: uid(), t: red.t, type: 'reward', redId: red.id, name: 'Canje: ' + r.name, emo: r.emo, pts: -r.cost });
+  save(); closeSheet(); renderAll(true);
+  confetti(); buzz([20, 60, 20, 60, 40]);
+  toast(`¡Canjeado! ${r.emo} ${r.name}`, () => {
+    S.redemptions = S.redemptions.filter(x => x.id !== red.id);
+    S.log = S.log.filter(x => x.redId !== red.id);
+    save(); renderAll();
+  });
+}
+
+/* ---------- Hojas ---------- */
+function openSheet(html) {
+  $('#sheet').innerHTML = '<div class="grab"></div>' + html;
+  $('#scrim').classList.add('on'); $('#sheet').classList.add('on');
+}
+function closeSheet() { $('#scrim').classList.remove('on'); $('#sheet').classList.remove('on'); }
+
+function confirmRedeem(r) {
+  const after = balance() - r.cost;
+  openSheet(`
+    <div class="big-emo">${esc(r.emo)}</div>
+    <h3 style="text-align:center">${esc(r.name)}</h3>
+    <p style="text-align:center;margin-bottom:10px">¿Canjear esta recompensa?</p>
+    ${r.spicy ? '<p style="text-align:center;font-size:13px">🔥 Siempre con ganas de los dos: si un día no apetece, se dice «hoy no» y el premio queda guardado para otro momento.</p>' : ''}
+    <div class="confirm-cost">${coin}${fmt(r.cost)}</div>
+    <div class="after">Te quedarán ${fmt(after)} puntos</div>
+    <div class="btns"><button class="btn" data-act="close">Cancelar</button><button class="btn primary" data-act="do-redeem" data-id="${r.id}">Canjear</button></div>`);
+}
+
+function taskForm(t) {
+  const isNew = !t; t = t || { emo: '⭐', name: '', pts: 10, cat: cat === 'all' ? 'opo' : cat };
+  openSheet(`
+    <h3>${isNew ? 'Nueva tarea' : 'Editar tarea'}</h3>
+    <p>Las de la categoría «Restan» quitan puntos.</p>
+    <form id="f">
+      <div class="two">
+        <label class="field"><span>Emoji</span><input name="emo" value="${esc(t.emo)}" maxlength="4" style="text-align:center;font-size:22px"></label>
+        <label class="field"><span>Nombre</span><input name="name" value="${esc(t.name)}" required placeholder="Ej: He hecho un esquema"></label>
+      </div>
+      <div class="two" style="grid-template-columns:1fr 1fr">
+        <label class="field"><span>Puntos</span><input name="pts" type="number" inputmode="numeric" min="1" max="9999" value="${t.pts}" required></label>
+        <label class="field"><span>Categoría</span><select name="cat">${CATS.filter(c => c.id !== 'all').map(c => `<option value="${c.id}" ${c.id === t.cat ? 'selected' : ''}>${c.emo} ${c.label}</option>`).join('')}</select></label>
+      </div>
+      <div class="btns">
+        ${isNew ? '' : `<button type="button" class="btn danger" data-act="del-task" data-id="${t.id}">Borrar</button>`}
+        <button type="button" class="btn" data-act="close">Cancelar</button>
+        <button class="btn primary">Guardar</button>
+      </div>
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    const data = { emo: d.emo.trim() || '⭐', name: d.name.trim(), pts: Math.abs(parseInt(d.pts, 10)) || 1, cat: d.cat };
+    if (isNew) S.tasks.push({ id: uid(), ...data }); else Object.assign(S.tasks.find(x => x.id === t.id), data);
+    save(); closeSheet(); renderAll();
+  };
+}
+
+function rewardForm(r) {
+  const isNew = !r; r = r || { emo: '🎁', name: '', cost: 100 };
+  openSheet(`
+    <h3>${isNew ? 'Nueva recompensa' : 'Editar recompensa'}</h3>
+    <p>Algo que te apetezca de verdad. Se ordenan solas por precio.</p>
+    <form id="f">
+      <div class="two">
+        <label class="field"><span>Emoji</span><input name="emo" value="${esc(r.emo)}" maxlength="4" style="text-align:center;font-size:22px"></label>
+        <label class="field"><span>Nombre</span><input name="name" value="${esc(r.name)}" required placeholder="Ej: Tarde de cine"></label>
+      </div>
+      <label class="field"><span>Precio en puntos</span><input name="cost" type="number" inputmode="numeric" min="1" max="99999" value="${r.cost}" required></label>
+      <label class="field" style="display:flex;align-items:center;gap:10px"><input type="checkbox" name="spicy" ${r.spicy ? 'checked' : ''} style="width:20px;height:20px;accent-color:var(--purple)"><span style="margin:0">🔥 Premio picante (se oculta con el modo discreto)</span></label>
+      <div class="btns">
+        ${isNew ? '' : `<button type="button" class="btn danger" data-act="del-reward" data-id="${r.id}">Borrar</button>`}
+        <button type="button" class="btn" data-act="close">Cancelar</button>
+        <button class="btn primary">Guardar</button>
+      </div>
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    const data = { emo: d.emo.trim() || '🎁', name: d.name.trim(), cost: Math.abs(parseInt(d.cost, 10)) || 1, spicy: !!d.spicy };
+    if (isNew) S.rewards.push({ id: uid(), ...data }); else Object.assign(S.rewards.find(x => x.id === r.id), data);
+    save(); closeSheet(); renderAll();
+  };
+}
+
+function adjustForm() {
+  openSheet(`
+    <h3>Puntos a mano</h3>
+    <p>Para algo que no está en la lista: un bonus sorpresa o un pequeño castigo.</p>
+    <form id="f">
+      <label class="field"><span>Motivo</span><input name="name" required placeholder="Ej: Has aprobado el simulacro 🎉"></label>
+      <label class="field"><span>Puntos (usa negativo para restar)</span><input name="pts" type="number" inputmode="numeric" value="50" required></label>
+      <div class="btns"><button type="button" class="btn" data-act="close">Cancelar</button><button class="btn primary">Añadir</button></div>
+    </form>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    const pts = parseInt(d.pts, 10) || 0;
+    if (!pts) return;
+    closeSheet();
+    const en = addLog({ type: 'adjust', name: d.name.trim(), emo: pts > 0 ? '🎁' : '⚡', cat: 'extra', pts });
+    toast(`${pts > 0 ? '+' : ''}${pts} · ${en.name}`, () => { S.log = S.log.filter(x => x.id !== en.id); save(); renderAll(); });
+  };
+}
+
+function menu() {
+  openSheet(`
+    <h3>Ajustes</h3>
+    <form id="f" style="margin-top:14px">
+      <div class="two">
+        <label class="field"><span>Avatar</span><input name="avatar" value="${esc(S.settings.avatar || '👑')}" maxlength="4" style="text-align:center;font-size:22px"></label>
+        <label class="field"><span>Nombre</span><input name="name" value="${esc(S.settings.name || '')}" placeholder="Su nombre"></label>
+      </div>
+      <button class="btn primary" style="width:100%">Guardar</button>
+    </form>
+    <div style="margin-top:12px">
+      <button class="menu-item" data-act="export"><span class="mi">💾</span><span>Copia de seguridad<small>Descarga un archivo con todos tus puntos</small></span></button>
+      <button class="menu-item" data-act="import"><span class="mi">📂</span><span>Restaurar copia<small>Carga un archivo guardado antes</small></span></button>
+      <button class="menu-item" data-act="spicy"><span class="mi">🔥</span><span>Contenido picante: ${spicyOn() ? 'visible' : 'oculto'}<small>${spicyOn() ? 'Tócalo para ocultarlo si alguien coge el móvil' : 'Tócalo para volver a mostrarlo'}</small></span></button>
+      <button class="menu-item" data-act="reset" style="color:var(--red)"><span class="mi">🗑️</span><span>Empezar de cero<small>Borra puntos, canjes e historial</small></span></button>
+    </div>
+    <input type="file" id="file" accept="application/json,.json" hidden>`);
+  $('#f').onsubmit = e => {
+    e.preventDefault();
+    const d = Object.fromEntries(new FormData(e.target));
+    S.settings.name = d.name.trim(); S.settings.avatar = d.avatar.trim() || '👑';
+    save(); closeSheet(); renderAll();
+  };
+  $('#file').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!Array.isArray(data.log) || !Array.isArray(data.tasks)) throw 0;
+      S = data; save(); closeSheet(); renderAll(); toast('Copia restaurada ✅');
+    } catch (err) { toast('Ese archivo no es una copia válida'); }
+  };
+}
+
+/* ---------- Efectos ---------- */
+let toastTimer;
+function toast(msg, undo) {
+  $('#toastMsg').textContent = msg;
+  const u = $('#toastUndo');
+  u.hidden = !undo;
+  u.onclick = () => { undo && undo(); $('#toast').classList.remove('on'); };
+  $('#toast').classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('#toast').classList.remove('on'), 4000);
+}
+
+function floater(ev, pts) {
+  const el = document.createElement('div');
+  el.className = 'floater';
+  el.style.left = ev.clientX + 'px'; el.style.top = ev.clientY + 'px';
+  el.style.color = pts >= 0 ? 'var(--green)' : 'var(--red)';
+  el.innerHTML = `${pts >= 0 ? '+' : '−'}${Math.abs(pts)}${coin}`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+
+function levelUp(lv) {
+  const el = document.createElement('div');
+  el.className = 'levelup';
+  el.innerHTML = `<div>¡Nivel ${lv}! 🎉<small>Sigue así, que la plaza es tuya</small></div>`;
+  document.body.appendChild(el);
+  confetti();
+  setTimeout(() => el.remove(), 2300);
+}
+
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const c = $('#confetti'), ctx = c.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+  const colors = ['#9147ff', '#bf94ff', '#ffd60a', '#00d68f', '#ff4fc8', '#ffffff'];
+  const P = Array.from({ length: 140 }, () => ({
+    x: innerWidth / 2, y: innerHeight * 0.45,
+    vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4,
+    s: Math.random() * 7 + 4, r: Math.random() * 6, vr: (Math.random() - .5) * .3,
+    c: colors[Math.random() * colors.length | 0],
+  }));
+  const start = performance.now();
+  (function frame(now) {
+    const k = (now - start) / 1800;
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    P.forEach(p => {
+      p.vy += .35; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r);
+      ctx.globalAlpha = Math.max(0, 1 - k); ctx.fillStyle = p.c;
+      ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore();
+    });
+    if (k < 1) requestAnimationFrame(frame); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+  })(start);
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener('click', ev => {
+  const nav = ev.target.closest('[data-view]');
+  if (nav) {
+    document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b === nav));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + nav.dataset.view));
+    scrollTo({ top: 0 });
+    return;
+  }
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const id = el.dataset.id;
+  switch (el.dataset.act) {
+    case 'cat': cat = id; renderCats(); renderTasks(); break;
+    case 'task': {
+      const t = S.tasks.find(x => x.id === id);
+      editing.tasks ? taskForm(t) : doTask(t, ev);
+      break;
+    }
+    case 'toggle-edit': editing[el.dataset.list] = !editing[el.dataset.list]; renderTasks(); renderRewards(); break;
+    case 'new-task': taskForm(); break;
+    case 'del-task':
+      if (confirm('¿Borrar esta tarea? Los puntos ya ganados se mantienen.')) { S.tasks = S.tasks.filter(x => x.id !== id); save(); closeSheet(); renderAll(); }
+      break;
+    case 'new-reward': rewardForm(); break;
+    case 'edit-reward': rewardForm(S.rewards.find(x => x.id === id)); break;
+    case 'del-reward':
+      if (confirm('¿Borrar esta recompensa?')) { S.rewards = S.rewards.filter(x => x.id !== id); save(); closeSheet(); renderAll(); }
+      break;
+    case 'redeem': confirmRedeem(S.rewards.find(x => x.id === id)); break;
+    case 'do-redeem': redeem(S.rewards.find(x => x.id === id)); break;
+    case 'fulfil': {
+      const r = S.redemptions.find(x => x.id === id);
+      r.done = true; r.doneAt = Date.now(); save(); renderAll(); buzz(15);
+      toast(`${r.emo} ${r.name}: ¡cumplido!`, () => { r.done = false; delete r.doneAt; save(); renderAll(); });
+      break;
+    }
+    case 'del-log': {
+      const i = S.log.findIndex(x => x.id === id);
+      if (i < 0) break;
+      const [gone] = S.log.splice(i, 1); save(); renderAll();
+      toast('Entrada borrada', () => { S.log.push(gone); save(); renderAll(); });
+      break;
+    }
+    case 'adjust': adjustForm(); break;
+    case 'spicy':
+      S.settings.spicy = !spicyOn(); save(); renderAll(); menu();
+      toast(spicyOn() ? '🔥 Contenido picante visible' : 'Contenido picante oculto');
+      break;
+    case 'period':
+      if (periodOn()) { S.settings.periodUntil = 0; toast('Modo regla desactivado'); }
+      else { S.settings.periodUntil = Date.now() + PERIOD_DAYS * 864e5; toast('🌸 Modo regla activado: mucho ánimo, todo suma más'); buzz(15); }
+      save(); renderAll();
+      break;
+    case 'menu': menu(); break;
+    case 'close': closeSheet(); break;
+    case 'export': {
+      const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `cartilla-puntos-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      break;
+    }
+    case 'import': $('#file').click(); break;
+    case 'reset':
+      if (confirm('¿Seguro? Se borran puntos, canjes e historial (tareas y premios se quedan).')) {
+        S.log = []; S.redemptions = []; save(); closeSheet(); lastLevel = null; renderAll(); toast('Cartilla a cero');
+      }
+      break;
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+renderAll();
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+</body>
+</html>
