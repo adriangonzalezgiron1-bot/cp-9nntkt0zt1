@@ -295,7 +295,7 @@ const LEVEL_STEP = 300;
 const PERIOD_DAYS = 6;      // el modo regla se apaga solo pasado este tiempo
 const PERIOD_PLUS = 1.5;    // lo que suma, vale más
 const PERIOD_MINUS = 0.5;   // lo que resta, duele menos
-const GRAND = 5000; // a partir de aquí, premio final destacado arriba del todo
+const GRAND = 100000; // a partir de aquí, premio final destacado arriba del todo
 const CATS = [
   { id: 'all',   label: 'Todas',        emo: '✨' },
   { id: 'opo',   label: 'Opo extra',     emo: '📚' },
@@ -364,9 +364,9 @@ const DEFAULTS = {
     { emo: '💌', name: 'Me escribes una carta de amor', cost: 50 },
     { emo: '🃏', name: 'Comodín: borro una penalización', cost: 50 },
     { emo: '🙋', name: 'Me das la razón en algo (una vez)', cost: 60 },
-    { emo: '🖊️', name: 'Material de estudio bonito', cost: 60 },
+    { emo: '🖊️', name: 'Material de estudio bonito', cost: 150 },
     { emo: '🥗', name: 'Me cocinas la cena que yo elija', cost: 70 },
-    { emo: '🌿', name: 'Planta para mi mesa de estudio', cost: 70 },
+    { emo: '🌿', name: 'Planta para mi mesa de estudio', cost: 180 },
     { emo: '🕯️', name: 'Spa en casa: velas, mascarilla y música', cost: 90 },
     { emo: '🌸', name: 'Kit regla: manta, bolsa caliente y peli', cost: 40 },
     { emo: '🎬', name: 'Elijo yo la peli o serie', cost: 50 },
@@ -374,23 +374,23 @@ const DEFAULTS = {
     { emo: '🛏️', name: 'Desayuno en la cama', cost: 80 },
     { emo: '🧽', name: 'Me libro de una tarea', cost: 100 },
     { emo: '💆', name: 'Masaje de 30 min para mí', cost: 120 },
-    { emo: '💐', name: 'Ramo de flores', cost: 150 },
-    { emo: '🥾', name: 'Excursión o plan que elijo yo', cost: 250 },
-    { emo: '🛍️', name: 'Capricho de hasta 25 €', cost: 300 },
-    { emo: '🍷', name: 'Cena en restaurante', cost: 400 },
-    { emo: '🧖', name: 'Día de spa', cost: 700 },
-    { emo: '✈️', name: 'Escapada de fin de semana', cost: 1500 },
+    { emo: '💐', name: 'Ramo de flores', cost: 350 },
+    { emo: '🥾', name: 'Excursión o plan que elijo yo', cost: 500 },
+    { emo: '🛍️', name: 'Capricho de hasta 25 €', cost: 900 },
+    { emo: '🍷', name: 'Cena en restaurante', cost: 1500 },
+    { emo: '🧖', name: 'Día de spa', cost: 3000 },
+    { emo: '✈️', name: 'Escapada de fin de semana', cost: 8000 },
     { emo: '🎲', name: 'Tarde de juegos de mesa que elijo yo', cost: 110 },
     { emo: '💅', name: 'Manicura o pedicura hecha por ti', cost: 180 },
-    { emo: '📖', name: 'Un libro que yo elija', cost: 200 },
+    { emo: '📖', name: 'Un libro que yo elija', cost: 400 },
     { emo: '🛍️', name: 'Me acompañas de compras sin quejarte', cost: 280 },
     { emo: '🧘', name: 'Mañana libre para mí (tú te encargas de todo)', cost: 350 },
-    { emo: '🎭', name: 'Entradas de cine, teatro o monólogo', cost: 450 },
+    { emo: '🎭', name: 'Entradas de cine, teatro o monólogo', cost: 1000 },
     { emo: '🌹', name: 'Cita sorpresa organizada por ti', cost: 550 },
-    { emo: '🎁', name: 'Capricho de hasta 50 €', cost: 600 },
-    { emo: '🔐', name: 'Escape room, kayak o experiencia juntos', cost: 800 },
-    { emo: '🏨', name: 'Noche de hotel con desayuno', cost: 1000 },
-    { emo: '🎤', name: 'Concierto de quien yo elija', cost: 1200 },
+    { emo: '🎁', name: 'Capricho de hasta 50 €', cost: 1800 },
+    { emo: '🔐', name: 'Escape room, kayak o experiencia juntos', cost: 2200 },
+    { emo: '🏨', name: 'Noche de hotel con desayuno', cost: 4500 },
+    { emo: '🎤', name: 'Concierto de quien yo elija', cost: 5000 },
     { emo: '💋', name: 'Sesión de besos sin prisa', cost: 20, spicy: true },
     { emo: '🛁', name: 'Ducha juntos', cost: 40, spicy: true },
     { emo: '⚡', name: 'Un rapidito cuando yo diga', cost: 50, spicy: true },
@@ -399,9 +399,9 @@ const DEFAULTS = {
     { emo: '🕯️', name: 'Masaje erótico con aceite para mí', cost: 80, spicy: true },
     { emo: '🙈', name: 'Noche con los ojos vendados', cost: 100, spicy: true },
     { emo: '👑', name: 'Esta noche mando yo', cost: 120, spicy: true },
-    { emo: '🎁', name: 'Juguete nuevo que elijo yo', cost: 250, spicy: true },
+    { emo: '🎁', name: 'Juguete nuevo que elijo yo', cost: 800, spicy: true },
     { emo: '✨', name: 'Cumplimos la fantasía que yo elija', cost: 500, spicy: true },
-    { emo: '🏨', name: 'Noche de hotel solo para nosotros 🔥', cost: 900, spicy: true },
+    { emo: '🏨', name: 'Noche de hotel solo para nosotros 🔥', cost: 4500, spicy: true },
     { emo: '👶', name: 'Tener un bebé', cost: 1000000 },
   ],
   log: [],
@@ -432,6 +432,34 @@ function save() {
   if (window.cpSync) cpSync.push();
 }
 
+const PRICE_UPDATES = {
+  'Material de estudio bonito': [60, 150],
+  'Planta para mi mesa de estudio': [70, 180],
+  'Ramo de flores': [150, 350],
+  'Un libro que yo elija': [200, 400],
+  'Excursión o plan que elijo yo': [250, 500],
+  'Juguete nuevo que elijo yo': [250, 800],
+  'Capricho de hasta 25 €': [300, 900],
+  'Entradas de cine, teatro o monólogo': [450, 1000],
+  'Cena en restaurante': [400, 1500],
+  'Capricho de hasta 50 €': [600, 1800],
+  'Escape room, kayak o experiencia juntos': [800, 2200],
+  'Día de spa': [700, 3000],
+  'Noche de hotel con desayuno': [1000, 4500],
+  'Noche de hotel solo para nosotros 🔥': [900, 4500],
+  'Concierto de quien yo elija': [1200, 5000],
+  'Escapada de fin de semana': [1500, 8000],
+};
+// Sube precios de premios caros en cartillas ya creadas (si nadie los ha cambiado a mano)
+function migrate() {
+  let changed = false;
+  S.rewards.forEach(r => {
+    const u = PRICE_UPDATES[r.name];
+    if (u && r.cost === u[0]) { r.cost = u[1]; changed = true; }
+  });
+  return changed;
+}
+
 /* ---------- Sincronización: el estado como filas sueltas ---------- */
 // Cada tarea, premio, apunte y canje es una fila independiente, así dos móviles
 // pueden apuntar a la vez sin pisarse.
@@ -458,6 +486,7 @@ function fromRows(rows) {
     log: by('log'), redemptions: by('red'),
   };
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  if (migrate()) save();
   renderAll();
 }
 const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
@@ -487,8 +516,8 @@ function streak() {
 
 function tier(cost) {
   if (cost >= GRAND) return ['t5', '🏆 El gran premio'];
-  if (cost >= 1000) return ['t4', 'Legendario'];
-  if (cost >= 300) return ['t3', 'Oro'];
+  if (cost >= 2000) return ['t4', 'Legendario'];
+  if (cost >= 500) return ['t3', 'Oro'];
   if (cost >= 100) return ['t2', 'Plata'];
   return ['t1', 'Bronce'];
 }
@@ -1040,6 +1069,7 @@ document.addEventListener('click', ev => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
+if (migrate()) save();
 renderAll();
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 </script>
