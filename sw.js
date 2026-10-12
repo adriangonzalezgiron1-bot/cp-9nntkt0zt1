@@ -1,4 +1,4 @@
-const CACHE = 'cartilla-v17';
+const CACHE = 'cartilla-v18';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable.png'];
 
 self.addEventListener('install', e => {

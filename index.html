@@ -107,6 +107,14 @@ main{padding:4px 16px calc(96px + var(--safe-bottom))}
 .add-card{border:1.5px dashed var(--line);background:transparent;color:var(--muted);align-items:center;justify-content:center;font-weight:600}
 
 /* Premios */
+.unlock-info{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.unlock-info .big{font-size:24px}
+.unlock-info b{color:var(--text)}
+.reward.lock .emo{filter:grayscale(1);opacity:.45}
+.reward.lock .name{color:var(--muted)}
+.lock-tag{color:#d4bcff;font-weight:700}
+.reward .meta br{flex-basis:100%;content:''}
+.ok-tag{color:var(--green);font-weight:700}
 .rewards{display:flex;flex-direction:column;gap:10px}
 .reward{position:relative;display:grid;grid-template-columns:56px 1fr auto;gap:12px;align-items:center;background:var(--surface);
   border:1px solid var(--line);border-radius:var(--radius);padding:12px}
@@ -115,6 +123,8 @@ main{padding:4px 16px calc(96px + var(--safe-bottom))}
 .reward .name{font-weight:700;font-size:15px}
 .reward .meta{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted);flex-wrap:wrap}
 .tier{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:6px}
+.t0{background:var(--surface-3);color:var(--muted)}
+.reward.lock .bar i{background:linear-gradient(90deg,var(--purple),#c39bff)}
 .t1{background:rgba(205,127,50,.18);color:#e0a26a}
 .t2{background:rgba(192,192,210,.16);color:#d3d3e0}
 .t3{background:rgba(255,214,10,.15);color:var(--gold)}
@@ -257,6 +267,7 @@ nav button.on svg{color:var(--purple)}
   <!-- PREMIOS -->
   <section class="view" id="v-premios">
     <div class="section-h"><h2>Recompensas</h2><button class="link" data-act="toggle-edit" data-list="rewards">Editar</button></div>
+    <div class="unlock-info" id="unlockInfo"></div>
     <div class="rewards" id="rewards"></div>
   </section>
 
@@ -514,6 +525,17 @@ function streak() {
   return n;
 }
 
+// Nivel necesario para poder canjear un premio (si no se ha fijado a mano, según su precio)
+function needLvl(r) {
+  if (r.lvl) return r.lvl;
+  if (r.cost >= GRAND) return 100;
+  if (r.cost >= 2000) return 10;
+  if (r.cost >= 500) return 4;
+  if (r.cost >= 100) return 2;
+  return 1;
+}
+const ptsForLvl = n => (n - 1) * LEVEL_STEP;
+
 function tier(cost) {
   if (cost >= GRAND) return ['t5', '🏆 El gran premio'];
   if (cost >= 2000) return ['t4', 'Legendario'];
@@ -559,7 +581,7 @@ function renderHeader(bump) {
   const into = e % LEVEL_STEP;
   $('#lvlB').textContent = `${into}/${LEVEL_STEP}`;
   $('#lvlBar').style.width = (into / LEVEL_STEP * 100) + '%';
-  if (lastLevel !== null && lv > lastLevel) levelUp(lv);
+  if (lastLevel !== null && lv > lastLevel) levelUp(lv, lastLevel);
   lastLevel = lv;
   const pb = $('#period');
   if (periodOn()) {
@@ -607,20 +629,33 @@ function renderRewards() {
   const list = S.rewards.filter(r => spicyOn() || !r.spicy).sort((a, b) => (b.cost >= GRAND) - (a.cost >= GRAND) || (a.cost >= GRAND ? b.cost - a.cost : a.cost - b.cost));
   const wrap = $('#rewards');
   wrap.classList.toggle('editing', editing.rewards);
+  const lv = level(), got = earned();
+  const visible = list;
+  const open = visible.filter(r => needLvl(r) <= lv).length;
+  const next = visible.map(needLvl).filter(n => n > lv).sort((a, c) => a - c)[0];
+  $('#unlockInfo').innerHTML = `<span class="big">🔓</span><span>Estás en el <b>nivel ${lv}</b>: tienes <b>${open} de ${visible.length}</b> premios desbloqueados.${next
+    ? `<br>En el <b>nivel ${next}</b> se desbloquean ${visible.filter(r => needLvl(r) === next).length} más (te faltan ${fmt(ptsForLvl(next) - got)} puntos ganados).` : ''}</span>`;
   wrap.innerHTML = list.map(r => {
     const [tc, tl] = tier(r.cost);
-    const can = b >= r.cost;
+    const need = needLvl(r), locked = lv < need;
+    const can = !locked && b >= r.cost;
     const pct = Math.min(100, Math.max(0, b) / r.cost * 100);
     const times = S.redemptions.filter(x => x.rewardId === r.id).length;
-    return `<div class="reward ${can ? '' : 'locked'} ${r.cost >= GRAND ? 'grand' : ''}">
+    const status = locked
+      ? `<span class="lock-tag">🔒 Se desbloquea en el nivel ${need}</span>${r.cost >= GRAND ? '' : `<br>Te faltan ${fmt(ptsForLvl(need) - got)} puntos ganados`}`
+      : can ? '<span class="ok-tag">¡Disponible!</span>'
+      : r.cost >= GRAND ? `Llevas un ${(Math.max(0, b) / r.cost * 100).toLocaleString('es-ES', { maximumFractionDigits: 3 })} %`
+      : `Desbloqueado · te faltan ${fmt(r.cost - b)}`;
+    return `<div class="reward ${can ? '' : 'locked'} ${locked ? 'lock' : ''} ${r.cost >= GRAND ? 'grand' : ''}">
       <div class="emo">${esc(r.emo)}</div>
       <div class="info">
         <div class="name">${esc(r.name)}</div>
-        <div class="meta"><span class="tier ${tc}">${tl}</span>${r.spicy ? '<span class="tier spicy">🔥</span>' : ''}${can ? '¡Lo tienes!' : r.cost >= GRAND ? `Llevas un ${(Math.max(0, b) / r.cost * 100).toLocaleString('es-ES', { maximumFractionDigits: 3 })} %` : `Te faltan ${fmt(r.cost - b)}`}${times ? ` · canjeado ${times}×` : ''}</div>
-        ${can ? '' : `<div class="bar"><i style="width:${pct}%"></i></div>`}
+        <div class="meta"><span class="tier ${tc}">${tl}</span>${r.spicy ? '<span class="tier spicy">🔥</span>' : ''}<span class="tier t0">Nv ${need}</span>${status}${times ? ` · canjeado ${times}×` : ''}</div>
+        ${can ? '' : `<div class="bar"><i style="width:${locked ? Math.min(100, got / ptsForLvl(need) * 100) : pct}%"></i></div>`}
       </div>
       ${editing.rewards
         ? `<button class="buy" data-act="edit-reward" data-id="${r.id}">✏️ Editar</button>`
+        : locked ? `<button class="buy" disabled>🔒 ${coin}${fmt(r.cost)}</button>`
         : `<button class="buy" data-act="redeem" data-id="${r.id}" ${can ? '' : 'disabled'}>${coin}${fmt(r.cost)}</button>`}
     </div>`;
   }).join('') + (editing.rewards ? `<button class="task add-card" style="min-height:64px" data-act="new-reward">＋ Nueva recompensa</button>` : '');
@@ -725,7 +760,7 @@ function doTask(t, ev) {
 }
 
 function redeem(r) {
-  if (balance() < r.cost) return;
+  if (balance() < r.cost || level() < needLvl(r)) return;
   const red = { id: uid(), t: Date.now(), rewardId: r.id, name: r.name, emo: r.emo, cost: r.cost, done: false, ...(DEV.me ? { by: DEV.me } : {}) };
   S.redemptions.push(red);
   S.log.push({ id: uid(), t: red.t, type: 'reward', redId: red.id, name: 'Canje: ' + r.name, emo: r.emo, pts: -r.cost });
@@ -796,7 +831,10 @@ function rewardForm(r) {
         <label class="field"><span>Emoji</span><input name="emo" value="${esc(r.emo)}" maxlength="4" style="text-align:center;font-size:22px"></label>
         <label class="field"><span>Nombre</span><input name="name" value="${esc(r.name)}" required placeholder="Ej: Tarde de cine"></label>
       </div>
-      <label class="field"><span>Precio en puntos</span><input name="cost" type="number" inputmode="numeric" min="1" max="99999" value="${r.cost}" required></label>
+      <div class="two" style="grid-template-columns:1fr 1fr">
+        <label class="field"><span>Precio en puntos</span><input name="cost" type="number" inputmode="numeric" min="1" max="9999999" value="${r.cost}" required></label>
+        <label class="field"><span>Nivel necesario</span><input name="lvl" type="number" inputmode="numeric" min="1" max="999" value="${r.lvl || ''}" placeholder="Auto (${needLvl({ cost: r.cost })})"></label>
+      </div>
       <label class="field" style="display:flex;align-items:center;gap:10px"><input type="checkbox" name="spicy" ${r.spicy ? 'checked' : ''} style="width:20px;height:20px;accent-color:var(--purple)"><span style="margin:0">🔥 Premio picante (se oculta con el modo discreto)</span></label>
       <div class="btns">
         ${isNew ? '' : `<button type="button" class="btn danger" data-act="del-reward" data-id="${r.id}">Borrar</button>`}
@@ -807,7 +845,7 @@ function rewardForm(r) {
   $('#f').onsubmit = e => {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(e.target));
-    const data = { emo: d.emo.trim() || '🎁', name: d.name.trim(), cost: Math.abs(parseInt(d.cost, 10)) || 1, spicy: !!d.spicy };
+    const data = { emo: d.emo.trim() || '🎁', name: d.name.trim(), cost: Math.abs(parseInt(d.cost, 10)) || 1, spicy: !!d.spicy, lvl: Math.abs(parseInt(d.lvl, 10)) || 0 };
     if (isNew) S.rewards.push({ id: uid(), ...data }); else Object.assign(S.rewards.find(x => x.id === r.id), data);
     save(); closeSheet(); renderAll();
   };
@@ -946,13 +984,17 @@ function floater(ev, pts) {
   setTimeout(() => el.remove(), 950);
 }
 
-function levelUp(lv) {
+function levelUp(lv, from) {
+  const news = S.rewards.filter(r => (spicyOn() || !r.spicy) && needLvl(r) > from && needLvl(r) <= lv);
   const el = document.createElement('div');
   el.className = 'levelup';
-  el.innerHTML = `<div>¡Nivel ${lv}! 🎉<small>Sigue así, que la plaza es tuya</small></div>`;
+  el.innerHTML = `<div>¡Nivel ${lv}! 🎉<small>${news.length
+    ? `🔓 ${news.length === 1 ? 'Nuevo premio desbloqueado' : `${news.length} premios desbloqueados`}: ${news.slice(0, 3).map(r => esc(r.emo)).join(' ')}`
+    : 'Sigue así, que la plaza es tuya'}</small></div>`;
   document.body.appendChild(el);
   confetti();
-  setTimeout(() => el.remove(), 2300);
+  setTimeout(() => el.remove(), news.length ? 3200 : 2300);
+  if (news.length) setTimeout(() => toast(`🔓 Desbloqueado: ${news.map(r => r.name).slice(0, 2).join(', ')}${news.length > 2 ? ` y ${news.length - 2} más` : ''}`), 2400);
 }
 
 function confetti() {
