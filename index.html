@@ -39,6 +39,11 @@ svg{display:block}
 .who{flex:1;min-width:0}
 .who b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who small{color:var(--muted);font-size:12px}
+.sync{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--line);padding:5px 9px;border-radius:999px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.sync.ok i{background:var(--green)} .sync.wait i{background:var(--gold)} .sync.off i{background:var(--red)}
+.code{font:800 22px/1.2 ui-monospace,Menlo,monospace;letter-spacing:.06em;text-align:center;background:var(--surface-2);border:1px dashed var(--line);border-radius:14px;padding:14px;margin:6px 0 12px;user-select:all;-webkit-user-select:all}
+.sec-t{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 4px}
 .icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--muted)}
 .icon-btn:active{background:var(--surface-2)}
 
@@ -226,6 +231,7 @@ nav button.on svg{color:var(--purple)}
   <div class="top-row">
     <div class="avatar" id="avatar">👑</div>
     <div class="who"><b id="who">Mi cartilla</b><small id="lvlTxt">Nivel 1</small></div>
+    <span class="sync" id="syncDot" hidden title="Sincronización"><i></i><b id="syncTxt">…</b></span>
     <button class="icon-btn" data-act="menu" aria-label="Ajustes">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
     </button>
@@ -404,6 +410,9 @@ const DEFAULTS = {
 
 /* ---------- Estado ---------- */
 const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36);
+const DEV_KEY = 'cartilla-dispositivo';
+let DEV = (() => { try { return JSON.parse(localStorage.getItem(DEV_KEY)) || {}; } catch (e) { return {}; } })();
+const saveDev = () => { try { localStorage.setItem(DEV_KEY, JSON.stringify(DEV)); } catch (e) {} };
 let S = load();
 let cat = 'all';
 let editing = { tasks: false, rewards: false };
@@ -420,9 +429,43 @@ function load() {
 }
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  if (window.cpSync) cpSync.push();
 }
 
-const spicyOn = () => S.settings.spicy !== false;
+/* ---------- Sincronización: el estado como filas sueltas ---------- */
+// Cada tarea, premio, apunte y canje es una fila independiente, así dos móviles
+// pueden apuntar a la vez sin pisarse.
+const clean = o => JSON.parse(JSON.stringify(o));
+function toRows() {
+  const rows = {};
+  const add = (kind, id, data) => { rows[kind + '_' + id] = { kind, id, data: clean(data) }; };
+  const { name, avatar, periodUntil } = S.settings;
+  add('settings', 'main', { name: name || '', avatar: avatar || '', periodUntil: periodUntil || 0 });
+  S.tasks.forEach((t, i) => add('task', t.id, { ...t, _o: i }));
+  S.rewards.forEach((r, i) => add('reward', r.id, { ...r, _o: i }));
+  S.log.forEach(e => add('log', e.id, e));
+  S.redemptions.forEach(r => add('red', r.id, r));
+  return rows;
+}
+function fromRows(rows) {
+  rows = structuredClone(rows); // copia: editar S no debe tocar la referencia de la nube
+  const by = k => Object.values(rows).filter(r => r.kind === k).map(r => r.data);
+  const strip = arr => arr.sort((a, b) => a._o - b._o).map(({ _o, ...x }) => x);
+  const st = by('settings')[0] || {};
+  S = {
+    settings: { ...S.settings, name: st.name || '', avatar: st.avatar || '👑', periodUntil: st.periodUntil || 0 },
+    tasks: strip(by('task')), rewards: strip(by('reward')),
+    log: by('log'), redemptions: by('red'),
+  };
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  renderAll();
+}
+const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
+const newCode = () => Array.from(crypto.getRandomValues(new Uint32Array(16)), n => ALPHA[n % ALPHA.length]).join('');
+const fmtCode = c => (c || '').toUpperCase().match(/.{1,4}/g).join('-');
+const normCode = c => (c || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+const spicyOn = () => DEV.spicy !== false;
 const periodOn = () => (S.settings.periodUntil || 0) > Date.now();
 const taskPts = t => {
   if (t.cat === 'resta') return -(periodOn() ? Math.max(1, Math.round(t.pts * PERIOD_MINUS)) : t.pts);
@@ -482,6 +525,7 @@ function renderHeader(bump) {
   $('#who').textContent = S.settings.name ? 'Cartilla de ' + S.settings.name : 'Mi cartilla';
   $('#avatar').textContent = S.settings.avatar || '👑';
   $('#lvlTxt').textContent = `Nivel ${lv} · ${fmt(e)} puntos ganados en total`;
+  $('#syncDot').hidden = !DEV.code;
   $('#lvlA').textContent = 'Nv ' + lv;
   const into = e % LEVEL_STEP;
   $('#lvlB').textContent = `${into}/${LEVEL_STEP}`;
@@ -584,7 +628,7 @@ function renderCanjes() {
   $('#done').innerHTML = done.length ? done.slice(0, 30).map(r => `
     <div class="row done">
       <span class="emo">${esc(r.emo)}</span>
-      <div class="info"><div class="name">${esc(r.name)}</div><div class="when">Disfrutado ${when(r.doneAt).toLowerCase()}</div></div>
+      <div class="info"><div class="name">${esc(r.name)}</div><div class="when">Disfrutado ${when(r.doneAt).toLowerCase()}${r.doneBy ? ' · marcado por ' + esc(r.doneBy) : ''}</div></div>
       <span class="amt spend">✓</span>
     </div>`).join('')
     : `<div class="empty" style="padding:20px">Todavía nada por aquí.</div>`;
@@ -620,7 +664,7 @@ function renderHistory() {
     const cls = e.type === 'reward' ? 'spend' : e.pts >= 0 ? 'plus' : 'minus';
     html += `<div class="row">
       <span class="emo">${esc(e.emo)}</span>
-      <div class="info"><div class="name">${esc(e.name)}</div><div class="when">${new Date(e.t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}${e.period ? ' · 🌸 modo regla' : ''}</div></div>
+      <div class="info"><div class="name">${esc(e.name)}</div><div class="when">${new Date(e.t).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}${e.period ? ' · 🌸 modo regla' : ''}${e.by ? ' · por ' + esc(e.by) : ''}</div></div>
       <span class="amt ${cls}">${e.pts >= 0 ? '+' : '−'}${fmt(Math.abs(e.pts))}</span>
       ${e.type !== 'reward' ? `<button class="x-btn" data-act="del-log" data-id="${e.id}" aria-label="Borrar">✕</button>` : '<span style="width:32px"></span>'}
     </div>`;
@@ -634,7 +678,7 @@ function renderAll(bump) {
 
 /* ---------- Acciones ---------- */
 function addLog(entry, ev) {
-  const e = { id: uid(), t: Date.now(), ...entry };
+  const e = { id: uid(), t: Date.now(), ...entry, ...(DEV.me ? { by: DEV.me } : {}) };
   S.log.push(e); save();
   if (ev) floater(ev, e.pts);
   renderAll(true);
@@ -653,7 +697,7 @@ function doTask(t, ev) {
 
 function redeem(r) {
   if (balance() < r.cost) return;
-  const red = { id: uid(), t: Date.now(), rewardId: r.id, name: r.name, emo: r.emo, cost: r.cost, done: false };
+  const red = { id: uid(), t: Date.now(), rewardId: r.id, name: r.name, emo: r.emo, cost: r.cost, done: false, ...(DEV.me ? { by: DEV.me } : {}) };
   S.redemptions.push(red);
   S.log.push({ id: uid(), t: red.t, type: 'reward', redId: red.id, name: 'Canje: ' + r.name, emo: r.emo, pts: -r.cost });
   save(); closeSheet(); renderAll(true);
@@ -770,7 +814,14 @@ function menu() {
       </div>
       <button class="btn primary" style="width:100%">Guardar</button>
     </form>
-    <div style="margin-top:12px">
+    <div class="sec-t">📱 Compartir entre móviles</div>
+    ${DEV.code ? `
+      <button class="menu-item" data-act="sync-info"><span class="mi">☁️</span><span>Conectado como ${esc(DEV.me || '¿?')}<small>Código ${fmtCode(DEV.code)} · toca para verlo o compartirlo</small></span></button>`
+    : `
+      <button class="menu-item" data-act="sync-create"><span class="mi">✨</span><span>Crear cartilla compartida<small>Hazlo en el móvil donde ya estén sus puntos</small></span></button>
+      <button class="menu-item" data-act="sync-join"><span class="mi">🔗</span><span>Unirme con un código<small>Para el segundo móvil</small></span></button>`}
+    <div class="sec-t">Más</div>
+    <div>
       <button class="menu-item" data-act="export"><span class="mi">💾</span><span>Copia de seguridad<small>Descarga un archivo con todos tus puntos</small></span></button>
       <button class="menu-item" data-act="import"><span class="mi">📂</span><span>Restaurar copia<small>Carga un archivo guardado antes</small></span></button>
       <button class="menu-item" data-act="spicy"><span class="mi">🔥</span><span>Contenido picante: ${spicyOn() ? 'visible' : 'oculto'}<small>${spicyOn() ? 'Tócalo para ocultarlo si alguien coge el móvil' : 'Tócalo para volver a mostrarlo'}</small></span></button>
@@ -791,6 +842,57 @@ function menu() {
       S = data; save(); closeSheet(); renderAll(); toast('Copia restaurada ✅');
     } catch (err) { toast('Ese archivo no es una copia válida'); }
   };
+}
+
+function syncForm(mode) {
+  const create = mode === 'create';
+  openSheet(`
+    <h3>${create ? 'Crear cartilla compartida' : 'Unirme a la cartilla'}</h3>
+    <p>${create
+      ? 'Se suben los puntos de este móvil y te doy un código para conectar el otro.'
+      : 'Escribe el código que salió en el otro móvil. Lo que haya en este se sustituye por la cartilla compartida.'}</p>
+    <form id="f">
+      <label class="field"><span>¿Quién usa este móvil?</span><input name="me" required value="${esc(DEV.me || '')}" placeholder="Ej: Cristina"></label>
+      ${create ? '' : '<label class="field"><span>Código</span><input name="code" required autocapitalize="characters" autocomplete="off" placeholder="XXXX-XXXX-XXXX-XXXX" style="font-family:ui-monospace,Menlo,monospace;letter-spacing:.06em"></label>'}
+      <div class="btns"><button type="button" class="btn" data-act="close">Cancelar</button><button class="btn primary" id="go">${create ? 'Crear' : 'Unirme'}</button></div>
+    </form>`);
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    if (!window.cpSync) return toast('Sin conexión: inténtalo con internet');
+    const d = Object.fromEntries(new FormData(e.target));
+    const btn = $('#go'); btn.disabled = true; btn.textContent = 'Conectando…';
+    try {
+      if (create) {
+        const code = newCode();
+        await cpSync.start(code, { upload: true });
+        DEV.code = code;
+      } else {
+        const code = normCode(d.code);
+        if (code.length < 16 || !(await cpSync.exists(code))) throw new Error('Ese código no existe. Revísalo.');
+        DEV.code = code;
+        await cpSync.start(code, { upload: false });
+      }
+      DEV.me = d.me.trim(); saveDev(); renderAll();
+      create ? syncInfo() : (closeSheet(), toast('✅ Conectado: ya veis la misma cartilla'));
+    } catch (err) {
+      btn.disabled = false; btn.textContent = create ? 'Crear' : 'Unirme';
+      toast(err.message || 'No se pudo conectar');
+    }
+  };
+}
+
+function syncInfo() {
+  openSheet(`
+    <h3>Cartilla compartida ☁️</h3>
+    <p>En el otro móvil: abre la app → ⋮ → <b>Unirme con un código</b> y escribe:</p>
+    <div class="code">${fmtCode(DEV.code)}</div>
+    <p style="font-size:13px">Guárdalo bien: es la llave de vuestra cartilla. Este móvil está conectado como <b>${esc(DEV.me || '¿?')}</b>.</p>
+    <div class="btns"><button class="btn danger" data-act="sync-leave">Desconectar</button><button class="btn primary" data-act="sync-share">Compartir código</button></div>`);
+}
+
+function setSync(state, txt) {
+  const el = $('#syncDot'); if (!el) return;
+  el.className = 'sync ' + state; $('#syncTxt').textContent = txt;
 }
 
 /* ---------- Efectos ---------- */
@@ -883,7 +985,7 @@ document.addEventListener('click', ev => {
     case 'do-redeem': redeem(S.rewards.find(x => x.id === id)); break;
     case 'fulfil': {
       const r = S.redemptions.find(x => x.id === id);
-      r.done = true; r.doneAt = Date.now(); save(); renderAll(); buzz(15);
+      r.done = true; r.doneAt = Date.now(); if (DEV.me) r.doneBy = DEV.me; save(); renderAll(); buzz(15);
       toast(`${r.emo} ${r.name}: ¡cumplido!`, () => { r.done = false; delete r.doneAt; save(); renderAll(); });
       break;
     }
@@ -895,8 +997,22 @@ document.addEventListener('click', ev => {
       break;
     }
     case 'adjust': adjustForm(); break;
+    case 'sync-create': syncForm('create'); break;
+    case 'sync-join': syncForm('join'); break;
+    case 'sync-info': syncInfo(); break;
+    case 'sync-share': {
+      const txt = `Código de la Cartilla de Puntos: ${fmtCode(DEV.code)}\n${location.href.split('#')[0]}`;
+      if (navigator.share) navigator.share({ text: txt }).catch(() => {});
+      else navigator.clipboard.writeText(txt).then(() => toast('Código copiado'));
+      break;
+    }
+    case 'sync-leave':
+      if (confirm('¿Desconectar este móvil? Los datos siguen en la nube y en el otro móvil.')) {
+        cpSync && cpSync.stop(); delete DEV.code; saveDev(); closeSheet(); renderAll(); toast('Móvil desconectado');
+      }
+      break;
     case 'spicy':
-      S.settings.spicy = !spicyOn(); save(); renderAll(); menu();
+      DEV.spicy = !spicyOn(); saveDev(); renderAll(); menu();
       toast(spicyOn() ? '🔥 Contenido picante visible' : 'Contenido picante oculto');
       break;
     case 'period':
@@ -926,6 +1042,78 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet()
 
 renderAll();
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+</script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { initializeFirestore, persistentLocalCache, collection, doc, onSnapshot, writeBatch, getDocs, query, limit }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey: 'AIzaSyCxQhPSXZRuqyTQ0CjgIQ20mkpl7fX9f_k',
+  authDomain: 'cartilla-puntos-j0551.firebaseapp.com',
+  projectId: 'cartilla-puntos-j0551',
+  storageBucket: 'cartilla-puntos-j0551.firebasestorage.app',
+  messagingSenderId: '642617339947',
+  appId: '1:642617339947:web:79fb205ced53fa782d3a6e',
+});
+const db = initializeFirestore(app, { localCache: persistentLocalCache(), ignoreUndefinedProperties: true });
+
+// JSON con claves ordenadas, para comparar filas sin falsos cambios
+const canon = v => Array.isArray(v) ? '[' + v.map(canon).join(',') + ']'
+  : v && typeof v === 'object' ? '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}'
+  : JSON.stringify(v);
+
+let code = null, unsub = null, ready = false, remote = {}, timer = null;
+const items = c => collection(db, 'cartillas', c, 'items');
+
+async function writeDiff() {
+  if (!code || !ready) return;
+  const local = toRows();
+  const ops = [];
+  for (const [k, r] of Object.entries(local)) if (!remote[k] || canon(remote[k].data) !== canon(r.data)) ops.push(['set', k, r]);
+  for (const k of Object.keys(remote)) if (!local[k]) ops.push(['del', k]);
+  for (let i = 0; i < ops.length; i += 400) {
+    const b = writeBatch(db);
+    ops.slice(i, i + 400).forEach(([op, k, r]) => op === 'set' ? b.set(doc(items(code), k), r) : b.delete(doc(items(code), k)));
+    b.commit().catch(err => { console.error(err); setSync('off', 'error'); });
+  }
+}
+
+function listen(c, firstLoad) {
+  return new Promise((resolve, reject) => {
+    let first = true;
+    unsub = onSnapshot(items(c), { includeMetadataChanges: true }, snap => {
+      // al unirse, no aplicar una caché vacía antes de tener los datos del servidor
+      if (snap.metadata.fromCache && snap.empty && first) return;
+      const rows = {};
+      snap.forEach(d => { rows[d.id] = d.data(); });
+      const changed = canon(rows) !== canon(remote);
+      remote = rows; ready = true;
+      if (first) lastLevel = null; // no celebrar subidas de nivel al cargar
+      if (changed || first) fromRows(rows);
+      if (first) { first = false; resolve(); }
+      setSync(snap.metadata.hasPendingWrites ? 'wait' : snap.metadata.fromCache ? 'off' : 'ok',
+        snap.metadata.hasPendingWrites ? 'guardando' : snap.metadata.fromCache ? 'sin conexión' : 'al día');
+    }, err => { console.error(err); setSync('off', 'error'); reject(err); });
+  });
+}
+
+window.cpSync = {
+  async exists(c) {
+    const s = await getDocs(query(items(c), limit(1)));
+    return !s.empty;
+  },
+  async start(c, { upload }) {
+    this.stop();
+    code = c;
+    if (upload) { ready = true; remote = {}; await writeDiff(); }
+    await listen(c);
+  },
+  stop() { unsub && unsub(); unsub = null; code = null; ready = false; remote = {}; },
+  push() { clearTimeout(timer); timer = setTimeout(writeDiff, 250); },
+};
+
+if (DEV.code) { setSync('wait', 'conectando'); cpSync.start(DEV.code, { upload: false }).catch(() => {}); }
 </script>
 </body>
 </html>

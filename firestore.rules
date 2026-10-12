@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Solo quien conoce el código secreto de la cartilla puede leerla o escribirla.
+    // No hay regla para /cartillas, así que nadie puede listar los códigos existentes.
+    match /cartillas/{code}/items/{item} {
+      allow read, write: if code.size() >= 16;
+    }
+  }
+}
